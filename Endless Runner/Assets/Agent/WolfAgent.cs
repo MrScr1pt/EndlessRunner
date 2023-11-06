@@ -12,11 +12,13 @@ public class WolfAgent : MonoBehaviour
     void Update()
     {
         float x = Input.GetAxisRaw("Horizontal");
-        transform.Translate(new Vector3(x, 0, 50) * speed * Time.deltaTime);
+        float z = Input.GetAxisRaw("Vertical");
+        transform.Translate(new Vector3(x, 0, z) * speed * Time.deltaTime);
 
         Vector3 currentPos = transform.position;
 
         currentPos.x = Mathf.Clamp(currentPos.x, -20, 8);
+        currentPos.z = Mathf.Clamp(currentPos.z, 15, 230);
 
         transform.position = currentPos;
     }
