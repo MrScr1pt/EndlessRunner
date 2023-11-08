@@ -83,7 +83,7 @@ public class SubmarineController : Agent
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.collider.tag == "Wall")
+        if (collision.collider.tag == "obstacles")
         {
             AddReward(-1);
             EndEpisode();
