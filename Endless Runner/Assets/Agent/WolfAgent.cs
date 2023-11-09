@@ -1,97 +1,112 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
 
-public class SubmarineController : Agent
+public class WolfAgent : Agent
 {
-    Rigidbody rigidBody;
-    public float speed = 10;
+    Rigidbody m_rigidbody;
+    float m_speed = 20;
 
-    public Transform TargetTransform;
+    public GameObject Spawner;
 
-    private GameObject goal;
+    private Vector3 startingPosition = new Vector3(0.0f, 1.59f, -5.0f);
 
-    private const float MAX_DISTANCE = 28.28427f;
+    private float boundXLeft = -20f;
+    private float boundXRight = 20f;
 
-    // Start is called before the first frame update
+    private enum ACTIONS
+    {
+        LEFT = 0,
+        NOTHING = 1,
+        RIGHT = 2
+    }
+
     void Start()
     {
+        m_rigidbody = GetComponent<Rigidbody>();
     }
 
     public override void OnEpisodeBegin()
     {
-        transform.localPosition = new Vector3(0, 0.5f, 0);
-
-        // Generate a random position for the treasure prefab 
-        float xPosition = UnityEngine.Random.Range(-9, 9);
-        float zPosition = UnityEngine.Random.Range(-9, 9);
-
-        // Assign the randomly generated position to the treasure prefab
-        //TargetTransform.localPosition = new Vector3(xPosition, 0.5f, zPosition);
+        // We reset the agent's position
+        transform.localPosition = startingPosition;
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        // The position of the agent
-        sensor.AddObservation(transform.localPosition.x);
-        sensor.AddObservation(transform.localPosition.y);
-
-        // The position of the treasure prefab
-        sensor.AddObservation(TargetTransform.localPosition.x);
-        sensor.AddObservation(TargetTransform.localPosition.y);
-
-        // The distance between the agent and the treasure
-        //sensor.AddObservation(Vector3.Distance(TargetTransform.localPosition, transform.localPosition));
+        // We don't need this function now because we use the RayPerceptionSensor
+        // Note however that we could add additional observations here, if we wanted to, like the speed & velocity of the agent etc.
     }
 
-    public override void OnActionReceived(ActionBuffers actions)
-    {
-        var actionTaken = actions.ContinuousActions;
-
-        float actionSpeed = actionTaken[0];//(actionTaken[0] + 1) / 2; // [0, +1]
-        float actionSteering = actionTaken[1]; // [-1, +1]
-
-        transform.Translate(actionSpeed * Vector3.forward * speed * Time.fixedDeltaTime);
-        transform.rotation = Quaternion.Euler(new Vector3(0, actionSteering * 180, 0));
-
-        float distance_scaled = Vector3.Distance(TargetTransform.localPosition, transform.localPosition) / MAX_DISTANCE;
-        //Debug.Log(distance_scaled);
-
-        AddReward(-distance_scaled / 10); // [0, 0.1]
-    }
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        ActionSegment<float> actions = actionsOut.ContinuousActions;
+        ActionSegment<int> actions = actionsOut.DiscreteActions;
 
-        actions[0] = -1;
-        actions[1] = 0;
+        var horizontal = Input.GetAxisRaw("Horizontal");
+        var vertical = Input.GetAxisRaw("Vertical");
 
-        if (Input.GetKey("w"))
-            actions[0] = 1;
+        if (horizontal == -1)
+        {
+            actions[0] = (int)ACTIONS.LEFT;
+        }
+        else if (horizontal == +1)
+        {
+            actions[0] = (int)ACTIONS.RIGHT;
+        }
+        else
+        {
+            actions[0] = (int)ACTIONS.NOTHING;
+        }
 
-        if (Input.GetKey("d"))
-            actions[1] = +0.5f;
-
-        if (Input.GetKey("a"))
-            actions[1] = -0.5f;
     }
 
-    private void OnCollisionEnter(Collision collision)
+
+    public override void OnActionReceived(ActionBuffers actions)
     {
-        if (collision.collider.tag == "obstacles")
+        var actionTaken = actions.DiscreteActions[0];
+
+        switch (actionTaken)
         {
-            AddReward(-1);
-            EndEpisode();
+            case (int)ACTIONS.NOTHING:
+                break;
+            case (int)ACTIONS.LEFT:
+                // We translate the agent's body to the left if it can move left
+                if (transform.localPosition.x > boundXLeft)
+                    transform.Translate(-Vector3.right * m_speed * Time.fixedDeltaTime);
+                break;
+            case (int)ACTIONS.RIGHT:
+                // We translate the agent's body to the right if it can move right
+                if (transform.localPosition.x < boundXRight)
+                    transform.Translate(Vector3.right * m_speed * Time.fixedDeltaTime);
+                break;
         }
-        else if (collision.collider.tag == "Treasure")
+
+        AddReward(0.1f);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        // If the agent collided with a ball, we delete the Balls & end the episode
+        if (other.tag == "obstacles")
         {
-            AddReward(1);
+            // We delete each Ball object that we have spawned so far 
+            var parent = Spawner.transform;
+            int numberOfChildren = parent.childCount;
+
+            for (int i = 0; i < numberOfChildren; i++)
+            {
+                if (parent.GetChild(i).tag == "obstacles")
+                {
+                    Destroy(parent.GetChild(i).gameObject);
+                }
+            }
+
             EndEpisode();
         }
     }
+
 }
