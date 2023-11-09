@@ -90,10 +90,10 @@ public class WolfAgent : Agent
 
     private void OnTriggerEnter(Collider other)
     {
-        // If the agent collided with a ball, we delete the Balls & end the episode
+        // If the agent collided with a obstacle, we delete the obstacles & end the episode
         if (other.tag == "obstacles")
         {
-            // We delete each Ball object that we have spawned so far 
+            // We delete each obstacle object that we have spawned so far 
             var parent = Spawner.transform;
             int numberOfChildren = parent.childCount;
 
