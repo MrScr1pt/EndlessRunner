@@ -32,6 +32,7 @@ public class WolfAgent : Agent
     public override void OnEpisodeBegin()
     {
         // We reset the agent's position
+        Debug.Log("Episodestarts");
         transform.localPosition = startingPosition;
     }
 
@@ -44,6 +45,8 @@ public class WolfAgent : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
+
+        Debug.Log("Heuristic");
         ActionSegment<int> actions = actionsOut.DiscreteActions;
 
         var horizontal = Input.GetAxisRaw("Horizontal");
@@ -62,6 +65,9 @@ public class WolfAgent : Agent
             actions[0] = (int)ACTIONS.NOTHING;
         }
 
+        Debug.Log("Action taken:");
+        Debug.Log(actions[0]);
+
     }
 
 
@@ -74,6 +80,7 @@ public class WolfAgent : Agent
             case (int)ACTIONS.NOTHING:
                 break;
             case (int)ACTIONS.LEFT:
+                Debug.Log("Left");
                 // We translate the agent's body to the left if it can move left
                 if (transform.localPosition.x > boundXLeft)
                     transform.Translate(-Vector3.right * m_speed * Time.fixedDeltaTime);
@@ -110,3 +117,5 @@ public class WolfAgent : Agent
     }
 
 }
+
+//mlagents-learn cfg.yaml --run-id="Run 1" --no-graphics
