@@ -8,7 +8,7 @@ public class Spawner : MonoBehaviour
     public GameObject BallPrefab;
 
     // The number of frames to wait before spawning another Ball
-    public int SpawnTime = 50;
+    public int SpawnTime = 100;
 
     // We will use this to count how many frames have elapsed since the last Ball creation
     private int counter = 0;
