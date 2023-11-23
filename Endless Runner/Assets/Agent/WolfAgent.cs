@@ -12,7 +12,7 @@ public class WolfAgent : Agent
 
     public GameObject Spawner;
 
-    private Vector3 startingPosition = new Vector3(0.0f, 1.59f, -5.0f);
+    private Vector3 startingPosition = new Vector3(8.06f, -6.7f, -104.2f);
 
     private float boundXLeft = -20f;
     private float boundXRight = 20f;
